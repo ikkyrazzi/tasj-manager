@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,19 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Display the user's profile information.
+     */
+    public function index(): View
+    {
+        $user = Auth::user(); // Mengambil informasi pengguna yang sedang login
+
+        return view('profile.index', [
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Display the user's profile edit form.
      */
     public function edit(Request $request): View
     {
@@ -26,13 +39,30 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $data = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Mengupdate foto profil jika ada
+        if ($request->hasFile('profile_photo')) {
+            // Hapus foto profil lama jika ada
+            if ($user->profile_photo_path) {
+                Storage::delete($user->profile_photo_path);
+            }
+
+            // Simpan foto profil baru
+            $path = $request->file('profile_photo')->store('profile_photos', 'public');
+            $data['profile_photo_path'] = $path;
         }
 
-        $request->user()->save();
+        // Update informasi pengguna
+        $user->fill($data);
+
+        // Set email_verified_at ke null jika email diubah
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -47,6 +77,11 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Hapus foto profil pengguna jika ada
+        if ($user->profile_photo_path) {
+            Storage::delete($user->profile_photo_path);
+        }
 
         Auth::logout();
 

@@ -25,10 +25,17 @@ class TeamController extends Controller
         $request->validate([
             'name' => 'required',
             'user_ids' => 'required|array',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi foto
         ]);
+
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('team_photos', 'public');
+        }
 
         $team = Team::create([
             'name' => $request->name,
+            'photo' => $photoPath, // Simpan path foto
         ]);
 
         $team->users()->attach($request->user_ids);
@@ -53,10 +60,21 @@ class TeamController extends Controller
         $request->validate([
             'name' => 'required',
             'user_ids' => 'required|array',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi foto
         ]);
+
+        $photoPath = $team->photo;
+        if ($request->hasFile('photo')) {
+            // Hapus foto lama jika ada
+            if ($photoPath && \Storage::disk('public')->exists($photoPath)) {
+                \Storage::disk('public')->delete($photoPath);
+            }
+            $photoPath = $request->file('photo')->store('team_photos', 'public');
+        }
 
         $team->update([
             'name' => $request->name,
+            'photo' => $photoPath, // Perbarui path foto
         ]);
 
         $team->users()->sync($request->user_ids);

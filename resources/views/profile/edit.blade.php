@@ -1,29 +1,63 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@extends('layouts.main')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+@section('title', 'Edit Profile')
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+@section('content')
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="py-3 mb-4"><span class="text-muted fw-light">Profile / Edit</span></h4>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Edit Profile</h5>
+            <a href="{{ route('profile.index') }}" class="btn btn-primary">Back</a>
         </div>
+        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PATCH')
+            <div class="card-body">
+                <!-- Name Field -->
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="name"
+                        name="name"
+                        value="{{ old('name', $user->name) }}"
+                        required
+                    />
+                </div>
+                
+                <!-- Email Field -->
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="email"
+                        name="email"
+                        value="{{ old('email', $user->email) }}"
+                        required
+                    />
+                </div>
+                
+                <!-- Profile Photo Field -->
+                <div class="mb-3">
+                    <label for="profile_photo" class="form-label">Profile Photo</label>
+                    <input
+                        type="file"
+                        class="form-control"
+                        id="profile_photo"
+                        name="profile_photo"
+                    />
+                    @if ($user->profile_photo_path)
+                        <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Profile Photo" class="mt-2" style="width: 100px; height: 100px; object-fit: cover;">
+                    @endif
+                </div>
+
+                <button type="submit" class="btn btn-success">Update</button>
+            </div>
+        </form>
     </div>
-</x-app-layout>
+</div>
+@endsection
